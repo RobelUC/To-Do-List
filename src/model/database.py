@@ -17,15 +17,18 @@ class Database:
         self.crear_tablas()
 
     def crear_tablas(self):
-        # Tabla Usuarios
+        # Tabla de Usuarios ACTUALIZADA
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS usuarios (
                 email TEXT PRIMARY KEY,
                 password_hash TEXT NOT NULL,
-                nombre TEXT
+                nombre TEXT,
+                apellido TEXT,
+                nacimiento TEXT,
+                genero TEXT
             )
         ''')
-        # Tabla Tareas
+        # La tabla tareas se queda igual por ahora
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS tareas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
