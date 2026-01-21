@@ -4,20 +4,20 @@ class Database:
     _instance = None
 
     def __new__(cls):
-        # Patrón Singleton: Asegura que solo haya una conexión a la base de datos
+        # Patrón Singleton: Para usar siempre la misma conexión
         if cls._instance is None:
             cls._instance = super(Database, cls).__new__(cls)
             cls._instance.inicializar()
         return cls._instance
 
     def inicializar(self):
-        # Crea la conexión y las tablas si no existen
+        # Conecta a la BD (crea el archivo si no existe)
         self.connection = sqlite3.connect("tareas.db", check_same_thread=False)
         self.cursor = self.connection.cursor()
         self.crear_tablas()
 
     def crear_tablas(self):
-        # Tabla de Usuarios
+        # Tabla Usuarios
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS usuarios (
                 email TEXT PRIMARY KEY,
@@ -25,7 +25,7 @@ class Database:
                 nombre TEXT
             )
         ''')
-        # Tabla de Tareas (la usaremos más adelante)
+        # Tabla Tareas
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS tareas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,6 +37,3 @@ class Database:
             )
         ''')
         self.connection.commit()
-
-    def cerrar(self):
-        self.connection.close()
