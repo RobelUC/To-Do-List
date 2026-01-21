@@ -1,0 +1,7 @@
+pytest==7.4.0
+werkzeug==3.0.1
+packaging
+pluggy
+iniconfig
+colorama
+markupsafe

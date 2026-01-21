@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: todo_app_dev
+    volumes:
+      # Sincroniza tu carpeta actual con el contenedor
+      # Así los cambios en VS Code se ven reflejados al instante dentro de Docker
+      - .:/app
+    environment:
+      - DB_PATH=/app/todo_database.db
+    # Si cierras el contenedor, lo reinicia automáticamente (opcional)
+    restart: unless-stopped
