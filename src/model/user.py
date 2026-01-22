@@ -1,45 +1,66 @@
-from werkzeug.security import generate_password_hash, check_password_hash
-from src.model.database import Database
+import sqlite3
 
 class Usuario:
-    # Agregamos los nuevos argumentos al constructor
-    def __init__(self, email, password, nombre, apellido, nacimiento, genero):
+    def __init__(self, email, password, nombre, apellido, fecha_nacimiento, genero):
         self.email = email
+        self.password = password
         self.nombre = nombre
         self.apellido = apellido
-        self.nacimiento = nacimiento
+        self.fecha_nacimiento = fecha_nacimiento
         self.genero = genero
-        self.password_hash = generate_password_hash(password)
-        self.db = Database()
 
     def guardar(self):
-        try:
-            # Insertamos las 6 columnas
-            self.db.cursor.execute(
-                """INSERT INTO usuarios 
-                   (email, password_hash, nombre, apellido, nacimiento, genero) 
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (self.email, self.password_hash, self.nombre, self.apellido, self.nacimiento, self.genero)
+        conexion = sqlite3.connect("todo_app.db")
+        cursor = conexion.cursor()
+        
+        # Crear tabla si no existe
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS usuarios (
+                email TEXT PRIMARY KEY,
+                password TEXT,
+                nombre TEXT,
+                apellido TEXT,
+                fecha_nacimiento TEXT,
+                genero TEXT
             )
-            self.db.connection.commit()
+        """)
+        
+        try:
+            cursor.execute("INSERT INTO usuarios VALUES (?, ?, ?, ?, ?, ?)", 
+                           (self.email, self.password, self.nombre, self.apellido, self.fecha_nacimiento, self.genero))
+            conexion.commit()
             return True
-        except Exception as e:
-            print(f"Error: {e}")
-            return False
-
-    def verificar_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        except sqlite3.IntegrityError:
+            return False # El correo ya existe
+        finally:
+            conexion.close()
 
     @staticmethod
     def login(email, password):
-        # El login sigue igual, solo necesitamos email y pass para entrar
-        db = Database()
-        cursor = db.cursor
-        cursor.execute("SELECT password_hash, nombre FROM usuarios WHERE email = ?", (email,))
-        resultado = cursor.fetchone()
+        conexion = sqlite3.connect("todo_app.db")
+        cursor = conexion.cursor()
         
-        if resultado:
-            hash_guardado = resultado[0]
-            if check_password_hash(hash_guardado, password):
-                return True 
-        return False
+        # Asegurarnos de que la tabla exista para evitar errores
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS usuarios (
+                email TEXT PRIMARY KEY,
+                password TEXT,
+                nombre TEXT,
+                apellido TEXT,
+                fecha_nacimiento TEXT,
+                genero TEXT
+            )
+        """)
+
+        # --- EL CAMBIO ESTÁ AQUÍ ---
+        # Seleccionamos todos los datos para crear el objeto Usuario
+        cursor.execute("SELECT * FROM usuarios WHERE email = ? AND password = ?", (email, password))
+        row = cursor.fetchone()
+        conexion.close()
+
+        if row:
+            # row tiene: (email, password, nombre, apellido, nacimiento, genero)
+            # Devolvemos un OBJETO Usuario con esos datos
+            return Usuario(row[0], row[1], row[2], row[3], row[4], row[5])
+        else:
+            return None
